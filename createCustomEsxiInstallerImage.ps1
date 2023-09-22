@@ -49,13 +49,13 @@ Add-EsxSoftwareDepot https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/
 #Get-EsxImageProfile
 
 # Download desired image
-Export-ESXImageProfile -ImageProfile "ESXi-8.0b-21203435-standard" -ExportToBundle -filepath ESXi-8.0b-21203435-standard.zip
+Export-ESXImageProfile -ImageProfile "ESXi-7.0.1-16850804-standard" -ExportToBundle -filepath ESXi-7.0.1-16850804-standard.zip
 
 # Remove the depot
 Remove-EsxSoftwareDepot https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
 
 # Add default ESXi image files to installation media
-Add-EsxSoftwareDepot .\ESXi-8.0b-21203435-standard.zip
+Add-EsxSoftwareDepot .\ESXi-7.0.1-16850804-standard.zip
 
 
 ##############################################################################
@@ -68,7 +68,7 @@ Invoke-WebRequest -Uri https://download3.vmware.com/software/vmw-tools/community
 
 # Get USB NIC driver
 # VMware Fling URL: https://flings.vmware.com/usb-network-native-driver-for-esxi
-Invoke-WebRequest -Uri https://download3.vmware.com/software/vmw-tools/USBNND/ESXi800-VMKUSB-NIC-FLING-61054763-component-20826251.zip -OutFile ESXi800-VMKUSB-NIC-FLING-61054763-component-20826251.zip
+Invoke-WebRequest -Uri https://download3.vmware.com/software/vmw-tools/USBNND/ESXi701-VMKUSB-NIC-FLING-40599856-component-17078334.zip -OutFile ESXi701-VMKUSB-NIC-FLING-40599856-component-17078334.zip
 
 ##############################################################################
 # Add the additional drivers
@@ -78,7 +78,7 @@ Invoke-WebRequest -Uri https://download3.vmware.com/software/vmw-tools/USBNND/ES
 Add-EsxSoftwareDepot .\Net-Community-Driver_1.2.7.0-1vmw.700.1.0.15843807_19480755.zip
 
 # Add USB NIC driver
-Add-EsxSoftwareDepot .\ESXi800-VMKUSB-NIC-FLING-61054763-component-20826251.zip
+Add-EsxSoftwareDepot .\ESXi701-VMKUSB-NIC-FLING-40599856-component-17078334.zip
 
 
 ##############################################################################
@@ -86,18 +86,18 @@ Add-EsxSoftwareDepot .\ESXi800-VMKUSB-NIC-FLING-61054763-component-20826251.zip
 ##############################################################################
 
 # Create new, custom profile
-New-EsxImageProfile -CloneProfile "ESXi-8.0b-21203435-standard" -name "ESXi-8.0b-21203435-standard-Net-Drivers" -Vendor "jonamiki.com"
+New-EsxImageProfile -CloneProfile "ESXi-7.0.1-16850804-standard" -name "ESXi-7.0.1-16850804-standard-Net-Drivers" -Vendor "homelab"
 
 # Optionally remove existing driver package (example for ne1000)
-#Remove-EsxSoftwarePackage -ImageProfile "ESXi-8.0b-21203435-standard-Net-Drivers" -SoftwarePackage "ne1000"
+#Remove-EsxSoftwarePackage -ImageProfile "ESXi-7.0.1-16850804-standard-Net-Drivers" -SoftwarePackage "ne1000"
 
 # Add community network driver package to custom profile
-Add-EsxSoftwarePackage -ImageProfile "ESXi-8.0b-21203435-standard-Net-Drivers" -SoftwarePackage "net-community"
+Add-EsxSoftwarePackage -ImageProfile "ESXi-7.0.1-16850804-standard-Net-Drivers" -SoftwarePackage "net-community"
 
 # Add USB NIC driver package to custom profile
-Add-EsxSoftwarePackage -ImageProfile "ESXi-8.0b-21203435-standard-Net-Drivers" -SoftwarePackage "vmkusb-nic-fling"
+Add-EsxSoftwarePackage -ImageProfile "ESXi-7.0.1-16850804-standard-Net-Drivers" -SoftwarePackage "vmkusb-nic-fling"
 
 ##############################################################################
 # Export the custom profile to ISO
 ##############################################################################
-Export-ESXImageProfile -ImageProfile "ESXi-8.0b-21203435-standard-Net-Drivers" -ExportToIso -filepath ESXi-8.0b-21203435-standard-Net-Drivers.iso
+Export-ESXImageProfile -ImageProfile "ESXi-7.0.1-16850804-standard-Net-Drivers" -ExportToIso -filepath ESXi-7.0.1-16850804-standard-Net-Drivers.iso
