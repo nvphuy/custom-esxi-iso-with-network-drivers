@@ -1,0 +1,74 @@
+# Set execution policy to allow script execution
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine
+
+# Check if VMware.PowerCLI module is imported
+if (-not (Get-Module -Name VMware.PowerCLI)) {
+  Install-Module -Name VMware.PowerCLI -SkipPublisherCheck
+}
+
+##############################################################################
+# Configuration Settings
+##############################################################################
+# Disable Customer Experience Improvement Program participation
+Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $false
+
+# Set Python path for VMware PowerCLI (specific to Python 3.7 compatibility)
+Set-PowerCLIConfiguration -PythonPath "c:\python37\python.exe" -Scope User
+
+##############################################################################
+# Fetch ESXi Image Depot for 6.7
+##############################################################################
+Add-EsxSoftwareDepot https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
+
+# Optional: List available image profiles for 6.7
+# Get-EsxImageProfile | Where-Object {$_.Name -like "ESXi-6.7*"}
+
+# Download the desired ESXi image profile bundle for ESXi 6.7
+Export-ESXImageProfile -ImageProfile "ESXi-6.7.0-20191204001-standard" -ExportToBundle -filepath ESXi-6.7.0-20191204001-standard.zip
+
+# Remove the depot from configuration
+Remove-EsxSoftwareDepot https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
+
+# Add the downloaded base ESXi image files to the installation media
+Add-EsxSoftwareDepot .\ESXi-6.7.0-20191204001-standard.zip
+
+##############################################################################
+# Download Additional Drivers
+##############################################################################
+
+# Get community network driver (for ESXi 6.7, if compatible)
+Invoke-WebRequest -Uri https://download3.vmware.com/software/vmw-tools/community-network-driver/Net-Community-Driver_1.2.3.0-1vmw.670.1.0.12345678.zip -OutFile Net-Community-Driver_1.2.3.0-1vmw.670.1.0.12345678.zip
+
+# Get USB NIC driver for ESXi 6.7 (from VMware Fling)
+Invoke-WebRequest -Uri https://download3.vmware.com/software/vmw-tools/USBNND/ESXi670-VMKUSB-NIC-FLING-40599856-component-12345678.zip -OutFile ESXi670-VMKUSB-NIC-FLING-40599856-component-12345678.zip
+
+##############################################################################
+# Add the Additional Drivers
+##############################################################################
+
+# Add community network driver to depot
+Add-EsxSoftwareDepot .\Net-Community-Driver_1.2.3.0-1vmw.670.1.0.12345678.zip
+
+# Add USB NIC driver to depot
+Add-EsxSoftwareDepot .\ESXi670-VMKUSB-NIC-FLING-40599856-component-12345678.zip
+
+##############################################################################
+# Create a New Custom Image Profile with Additional Drivers
+##############################################################################
+
+# Create a new custom profile for ESXi 6.7 with network drivers
+New-EsxImageProfile -CloneProfile "ESXi-6.7.0-20191204001-standard" -name "ESXi-6.7.0-20191204001-standard-Net-Drivers" -Vendor "homelab"
+
+# Optional: Remove existing network driver (example for ne1000)
+# Remove-EsxSoftwarePackage -ImageProfile "ESXi-6.7.0-20191204001-standard-Net-Drivers" -SoftwarePackage "ne1000"
+
+# Add community network driver package to custom profile
+Add-EsxSoftwarePackage -ImageProfile "ESXi-6.7.0-20191204001-standard-Net-Drivers" -SoftwarePackage "net-community"
+
+# Add USB NIC driver package to custom profile
+Add-EsxSoftwarePackage -ImageProfile "ESXi-6.7.0-20191204001-standard-Net-Drivers" -SoftwarePackage "vmkusb-nic-fling"
+
+##############################################################################
+# Export the Custom Image Profile to ISO
+##############################################################################
+Export-ESXImageProfile -ImageProfile "ESXi-6.7.0-20191204001-standard-Net-Drivers" -ExportToIso -filepath ESXi-6.7.0-20191204001-standard-Net-Drivers.iso
